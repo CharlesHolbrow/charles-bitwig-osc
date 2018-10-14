@@ -1,0 +1,14 @@
+{
+  "name": "charles-bitwig-osc",
+  "version": "1.0.0",
+  "description": "Interact with Bitwig Studio via OSC API",
+  "main": "'none'",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typed-bitwig-api": "^6.0.0"
+  }
+}
