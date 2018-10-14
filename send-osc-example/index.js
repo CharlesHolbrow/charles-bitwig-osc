@@ -16,7 +16,7 @@ const heartbeat = () => {
         args: [
             {
                 type: 'i',
-                value: i++ % 4,
+                value: i % 4,
             },{
                 type: 'i',
                 value: i % 128,
@@ -29,6 +29,7 @@ const heartbeat = () => {
             },
         ],
     }, '127.0.0.1', 9000);
+    i++;
 };
 
 io.on('ready', () => {

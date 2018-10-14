@@ -18,7 +18,7 @@ function init() {
   var transport = host.createTransport();
   transport.isPlaying().markInterested();
 
-  // This clip mostly follows the clip slot that is selected in the GUI.
+  // `clip` mostly follows the clip slot that is selected in the launcher GUI.
   // However, when moving the GUI cursor to a clip slot that is empty, 'clip'
   // will still point to the most recently selected clip. 
   var clip = host.createLauncherCursorClip(512, 128);
