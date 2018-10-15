@@ -23,7 +23,7 @@ function init() {
   // `clip` mostly follows the clip slot that is selected in the launcher GUI.
   // However, when moving the GUI cursor to a clip slot that is empty, 'clip'
   // will still point to the most recently selected clip. 
-  var clip = host.createLauncherCursorClip(CLIP_WIDTH, 128);
+  var clip = host.createLauncherCursorClip(CLIP_WIDTH, 1);
   clip.exists().markInterested();
   clip.setStepSize(1);
   
@@ -62,7 +62,8 @@ function init() {
 
       clip.setStepSize(1 / CLIP_WIDTH); // this resets step scrolling to 0
       clip.scrollToStep(beat * CLIP_WIDTH);
-      clip.setStep(remainderInSteps, y, v, l);
+      clip.scrollToKey(y);
+      clip.setStep(remainderInSteps, 0, v, l);
 
       println('scroll to: ' + beat + ' - ' + remainder + ' - ' + remainderInSteps);
 
