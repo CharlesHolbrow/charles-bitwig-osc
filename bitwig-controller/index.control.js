@@ -1,6 +1,6 @@
 loadAPI(7);
 
-var CLIP_WIDTH = 65536;
+var CLIP_WIDTH = Math.pow(2, 13); // 8192. 2^14 seems to cause slowdowns.
 
 // Remove this if you want to be able to use deprecated methods without causing script to stop.
 // This is useful during development.

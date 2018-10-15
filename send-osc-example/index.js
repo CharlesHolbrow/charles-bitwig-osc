@@ -12,17 +12,17 @@ let i = 0;
 
 const heartbeat = () => {
     io.send({
-        address: '/launcher/selected-clip/create-note-with-step',
+        address: '/launcher/selected-clip/create-note',
         args: [
             {
                 type: 'i',
+                value: i % 128,
+            },{
+                type: 'i',
+                value: i % 128,
+            },{
+                type: 'f',
                 value: i % 4,
-            },{
-                type: 'i',
-                value: i % 128,
-            },{
-                type: 'i',
-                value: i % 128,
             },{
                 type: 'f',
                 value: 1/3,
