@@ -1,5 +1,7 @@
 loadAPI(7);
 
+var CLIP_WIDTH = 65536;
+
 // Remove this if you want to be able to use deprecated methods without causing script to stop.
 // This is useful during development.
 host.setShouldFailOnDeprecatedUse(true);
@@ -21,51 +23,58 @@ function init() {
   // `clip` mostly follows the clip slot that is selected in the launcher GUI.
   // However, when moving the GUI cursor to a clip slot that is empty, 'clip'
   // will still point to the most recently selected clip. 
-  var clip = host.createLauncherCursorClip(512, 128);
+  var clip = host.createLauncherCursorClip(CLIP_WIDTH, 128);
   clip.exists().markInterested();
   clip.setStepSize(1);
   
   // Configure osc. AddressSpace is a term from the OSC spec. It means 
-  var m = host.getOscModule();
-  var as = m.createAddressSpace();
-  var nameIndex = 0;
+  var oscModule = host.getOscModule();
+  var as = oscModule.createAddressSpace();
 
-  clip.exists().addValueObserver(function(exists){
-    if (!exists) {
-      println('clip does not exists')
-      return;
-    }
-
-    println('clip exists');
-    clip.setName('c' + nameIndex++);
-  });
 
   // handler (OscConnection source, OscMessage message)
   as.registerDefaultMethod(function(connection, msg) {
-    println('---')
-    println(msg.getTypeTag());
-    println(msg.getInt(0));
-    println(msg.getFloat(2));
+    println('- unregistered method - ' + msg.getAddressPattern())
   });
 
-  // Proxy clip.setStep
+  // create a note, with the beat position specified from the beginning
   as.registerMethod('/launcher/selected-clip/create-note',
-    ',iiif',
-    'add a note to selected launcher clip', 
+    ',iiff',
+    'add a note to selected launcher clip, specifying start point as a beat (float)',
     function(c, msg) {
       if (!clip.exists().get()) {
         println('cannot place notes - no clip selected');
         return;
       }
-      var x = msg.getInt(0);
-      var y = msg.getInt(1);
-      var v = msg.getInt(2);   // velocity
-      var l = msg.getFloat(3); // length in beats (not )
-      clip.setStep(x, y, v, l);
+
+      var y = msg.getInt(0);   // midi note number
+      var v = msg.getInt(1);   // velocity
+      var x = msg.getFloat(2); // beat position as float
+      var l = msg.getFloat(3); // length in beats (not steps)
+
+      // where do we want to position the note?
+      var beat = Math.floor(x); // integer beat number
+      var remainder = x - beat; // just the decimal
+
+      // We will scroll the clip to the beat, and then used setStep to specify
+      // the point within the beat.
+      var remainderInSteps = Math.floor(remainder * CLIP_WIDTH);
+
+      clip.setStepSize(1 / CLIP_WIDTH); // this resets step scrolling to 0
+      clip.scrollToStep(beat * CLIP_WIDTH);
+      clip.setStep(remainderInSteps, y, v, l);
+
+      println('scroll to: ' + beat + ' - ' + remainder + ' - ' + remainderInSteps);
+
+      // Strinctly speaking, this is needed. My methods should not expect any
+      // particular step size or scroll position.
+      clip.setStepSize(1);
+      clip.scrollToStep(0);
   });
 
-  m.createUdpServer(9000, as);
+  oscModule.createUdpServer(9000, as);
 }
+
 
 
 function flush() {
@@ -73,5 +82,4 @@ function flush() {
 }
 
 function exit() {
-
 }
