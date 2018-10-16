@@ -26,18 +26,20 @@ function init() {
   var clip = host.createLauncherCursorClip(CLIP_WIDTH, 1);
   clip.exists().markInterested();
   clip.setStepSize(1);
+  clip.getLoopLength().markInterested();
+  clip.getLoopStart().markInterested();
   
   // Configure osc. AddressSpace is a term from the OSC spec. It means 
   var oscModule = host.getOscModule();
   var as = oscModule.createAddressSpace();
-
 
   // handler (OscConnection source, OscMessage message)
   as.registerDefaultMethod(function(connection, msg) {
     println('- unregistered method - ' + msg.getAddressPattern())
   });
 
-  // create a note, with the beat position specified from the beginning
+  // Create a note, with the beat position specified from the beginning. Leaves
+  // the scroll position and step size in an arbitrary state.
   as.registerMethod('/launcher/selected-clip/create-note',
     ',iiff',
     'add a note to selected launcher clip, specifying start point as a beat (float)',
@@ -65,15 +67,24 @@ function init() {
       clip.scrollToKey(y);
       clip.setStep(remainderInSteps, 0, v, l);
 
-      println('scroll to: ' + beat + ' - ' + remainder + ' - ' + remainderInSteps);
-
-      // Strinctly speaking, this is needed. My methods should not expect any
-      // particular step size or scroll position.
-      clip.setStepSize(1);
-      clip.scrollToStep(0);
+      // We are not re-setting the step size or scrolTo. My methods should not
+      // expect any particular step size or scroll position.
   });
 
-  oscModule.createUdpServer(9000, as);
+  as.registerMethod('/launcher/selected-clip/set-loop',
+    ',ff',
+    'Set loop start and loop length',
+    function(c, msg){
+      var start = msg.getFloat(0);
+      var length = msg.getFloat(1);
+
+      println('loop start('+start+') length('+length+')');
+
+      clip.getLoopStart().set(start);
+      clip.getLoopLength().set(length);
+  });
+
+  oscModule.createUdpServer(48888, as);
 }
 
 
