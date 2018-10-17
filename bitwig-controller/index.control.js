@@ -22,14 +22,29 @@ function init() {
 
   // `clip` mostly follows the clip slot that is selected in the launcher GUI.
   // However, when moving the GUI cursor to a clip slot that is empty, 'clip'
-  // will still point to the most recently selected clip. 
+  // will still point to the most recently selected clip.
   var clip = host.createLauncherCursorClip(CLIP_WIDTH, 1);
   clip.exists().markInterested();
   clip.setStepSize(1);
   clip.getLoopLength().markInterested();
   clip.getLoopStart().markInterested();
-  
-  // Configure osc. AddressSpace is a term from the OSC spec. It means 
+
+  // Create a scrollable bank of tracks.
+  var trackBank = host.createMainTrackBank(1, 8, 1);
+  var track = trackBank.getItemAt(0);
+  var clipBank = track.clipLauncherSlotBank();
+  var clipSlot = clipBank.getItemAt(0);
+
+  trackBank.scrollPosition().markInterested();
+  clipBank.scrollPosition().markInterested();
+  clipSlot.name().markInterested();
+
+  // setup scene
+  var sceneBank = trackBank.sceneBank();
+  var scene = sceneBank.getItemAt(0);
+  scene.name().markInterested();
+
+  // Configure osc. AddressSpace is a term from the OSC spec. It means
   var oscModule = host.getOscModule();
   var as = oscModule.createAddressSpace();
 
@@ -47,7 +62,7 @@ function init() {
       if (!clip.exists().get()) {
         println('cannot place notes - no clip selected');
         return;
-      }
+      };
 
       var y = msg.getInt(0);   // midi note number
       var v = msg.getInt(1);   // velocity
@@ -84,10 +99,36 @@ function init() {
       clip.getLoopLength().set(length);
   });
 
+  as.registerMethod('/launcher/create-clip',
+    ',iis',
+    'create a clip, if the position is empty',
+    function(c, msg) {
+      var trackIndex = msg.getInt(0);
+      var clipIndex = msg.getInt(1);
+      var clipName = msg.getString(2);
+
+      println('-----create: ('+trackIndex+', '+clipIndex+')');
+
+      // Scroll to the desired location. Note that .set() is asyncronous. If we
+      // call .get immediately after, we will get the old value. This means that
+      // we cannot .
+      trackBank.scrollPosition().set(trackIndex);
+      clipBank.scrollPosition().set(clipIndex);
+      clipBank.createEmptyClip(0, 4);
+      clipBank.select(0);
+
+      // Because, the scroll set commands above have not yet taken palce, we
+      // cannot yet get the name. That is why the following lines (commented
+      // out) will not have the desired effect.
+      // var clipSlot = clipBank.getItemAt(0);
+      // println(clipSlot.name().get();)
+
+      // We can set the name, because calls do execute in the correct order.
+      clip.setName(clipName);
+  });
+
   oscModule.createUdpServer(48888, as);
 }
-
-
 
 function flush() {
    // TODO: Flush any output to your controller here.
