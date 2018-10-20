@@ -99,21 +99,25 @@ function init() {
       clip.getLoopLength().set(length);
   });
 
+  // create a clip in the launcher, optionally deleting the existing clip
   as.registerMethod('/launcher/create-clip',
-    ',iis',
+    ',iisi',
     'create a clip, if the position is empty',
     function(c, msg) {
       var trackIndex = msg.getInt(0);
       var clipIndex = msg.getInt(1);
       var clipName = msg.getString(2);
+      var clear = msg.getInt(3); // 0 or 1 (bools are non standard in osc)
 
-      println('-----create: ('+trackIndex+', '+clipIndex+')');
+      println('Create Clip: ('+trackIndex+', '+clipIndex+') '
+        + clear ? 'Delete existing clip!' : '');
 
       // Scroll to the desired location. Note that .set() is asyncronous. If we
       // call .get immediately after, we will get the old value. This means that
       // we cannot .
       trackBank.scrollPosition().set(trackIndex);
       clipBank.scrollPosition().set(clipIndex);
+      if (clear) clipBank.deleteClip(0);
       clipBank.createEmptyClip(0, 4);
       clipBank.select(0);
 
@@ -125,6 +129,7 @@ function init() {
 
       // We can set the name, because calls do execute in the correct order.
       clip.setName(clipName);
+      clipBank.showInEditor(0);
   });
 
   oscModule.createUdpServer(48888, as);
