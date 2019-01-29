@@ -60,8 +60,10 @@ function init() {
     'add a note to selected launcher clip, specifying start point as a beat (float)',
     function(c, msg) {
       if (!clip.exists().get()) {
-        println('cannot place notes - no clip selected');
-        return;
+        println('Warning! no clip selected');
+        // It's possible that the clip does exists, but our .get() result is out
+        // of date. In that case, it is a bug to return, so we print a warning
+        // instead.
       };
 
       var y = msg.getInt(0);   // midi note number
@@ -99,18 +101,25 @@ function init() {
       clip.getLoopLength().set(length);
   });
 
+  as.registerMethod('/launcher/selected-clip/set-start',
+    ',f',
+    'Set clip start point',
+    function(c, msg){
+      clip.getPlayStart().set(msg.getFloat(0));
+  });
+
   // create a clip in the launcher, optionally deleting the existing clip
   as.registerMethod('/launcher/create-clip',
     ',iisi',
-    'create a clip, if the position is empty',
+    'create a clip. The fourth arg indicates if an existing clip should be deleted',
     function(c, msg) {
       var trackIndex = msg.getInt(0);
       var clipIndex = msg.getInt(1);
       var clipName = msg.getString(2);
       var clear = msg.getInt(3); // 0 or 1 (bools are non standard in osc)
 
-      println('Create Clip: ('+trackIndex+', '+clipIndex+') '
-        + clear ? 'Delete existing clip!' : '');
+      println('Create Clip: ('+trackIndex+', '+clipIndex+')'
+        + (clear ? ' Delete existing clip!' : '')); // requires parenthesis
 
       // Scroll to the desired location. Note that .set() is asyncronous. If we
       // call .get immediately after, we will get the old value. This means that
@@ -121,7 +130,7 @@ function init() {
       clipBank.createEmptyClip(0, 4);
       clipBank.select(0);
 
-      // Because, the scroll set commands above have not yet taken palce, we
+      // Because, the scroll set commands above have not yet taken place, we
       // cannot yet get the name. That is why the following lines (commented
       // out) will not have the desired effect.
       // var clipSlot = clipBank.getItemAt(0);
@@ -131,6 +140,24 @@ function init() {
       clip.setName(clipName);
       clipBank.showInEditor(0);
   });
+
+  as.registerMethod('/launcher/select-clip',
+    'ii',
+    'Select a clip in the launcher',
+    function(c, msg){
+      var trackIndex = msg.getInt(0);
+      var clipIndex = msg.getInt(1);
+      trackBank.scrollPosition().set(trackIndex);
+      clipBank.scrollPosition().set(clipIndex);
+      clipBank.select(0);
+    });
+
+  // as.registerMethod('/test/',
+  //   '#bundle',
+  //   'can i use a bundle?',
+  //   function(c, msg) {
+  //     println('bundle: ' + msg);
+  //   });
 
   oscModule.createUdpServer(48888, as);
 }
