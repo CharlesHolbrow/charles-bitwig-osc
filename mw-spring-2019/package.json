@@ -1,0 +1,14 @@
+{
+  "name": "mw-spring-2019",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mw-spring-2019.control.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typed-bitwig-api": "^6.0.0"
+  }
+}
