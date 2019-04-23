@@ -28,7 +28,7 @@ function init() {
 
    // send osc for track
    var masterTrack = host.createMasterTrack(1);
-   masterTrack.addVuMeterObserver(127, -1, false, function(v){
+   masterTrack.addVuMeterObserver(256, -1, false, function(v){
       try {
          sender.sendMessage('/track/master/meter', v);
       } catch (err) {
